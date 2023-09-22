@@ -8,16 +8,6 @@ import { Button, Flex, Text, View, withAuthenticator } from '@aws-amplify/ui-rea
 import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
-async function onCreate() {
-  await DataStore.save(
-    new Post({
-      title: `New title ${Date.now()}`,
-      rating: Math.floor(Math.random() * (8 - 1) + 1),
-      status: PostStatus.ACTIVE,
-    })
-  );
-}
-
 async function onDeleteAll() {
   await DataStore.delete(Post, Predicates.ALL);
 }
@@ -34,10 +24,21 @@ const App = ({ signOut, user }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-
   useEffect(() => {
     onQueryAll()
   }, []);
+
+  async function onCreate() {
+    const post = await DataStore.save(
+      new Post({
+        title: `New title ${Date.now()}`,
+        rating: Math.floor(Math.random() * (8 - 1) + 1),
+        status: PostStatus.ACTIVE,
+      })
+    );
+    setPosts(posts);
+    setPosts([...posts, post]);
+  }
 
   async function onQueryAll() {
     try {
