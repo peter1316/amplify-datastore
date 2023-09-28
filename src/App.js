@@ -8,25 +8,9 @@ import { Button, Flex, Text, View, withAuthenticator } from '@aws-amplify/ui-rea
 import awsconfig from "./aws-exports";
 Amplify.configure(awsconfig);
 
-async function onDeleteAll() {
-  await DataStore.delete(Post, Predicates.ALL);
-}
-
 const App = ({ signOut, user }) => {
 
   const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-      const subscription = DataStore.observe(Post).subscribe((msg) => {
-      console.log(msg.model, msg.opType, msg.element);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    onQueryAll()
-  }, []);
 
   async function onCreate() {
     const post = await DataStore.save(
@@ -40,6 +24,24 @@ const App = ({ signOut, user }) => {
     setPosts([...posts, post]);
   }
 
+  async function onDeleteAll() {
+    await DataStore.delete(Post, Predicates.ALL);
+    setPosts([]);
+  }
+
+  useEffect(() => {
+      const subscription = DataStore.observe(Post).subscribe((msg) => {
+      console.log(msg.model, msg.opType, msg.element);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+
+  useEffect(() => {
+    onQueryAll()
+  }, []);
+
   async function onQueryAll() {
     try {
       const posts = await DataStore.query(Post);
@@ -49,8 +51,9 @@ const App = ({ signOut, user }) => {
   };
 
   async function deletePost({ id }) {
-    console.log('deletePost');
-    console.log(id);
+    const toDelete = await DataStore.query(Post, id);
+    DataStore.delete(toDelete);
+    onQueryAll();
   }
 
   async function onQuery() {
